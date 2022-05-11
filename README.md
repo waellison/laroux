@@ -13,7 +13,7 @@ from laroux import LarouxCache
 
 class Server:
   def __init__(self):
-    self.cache = LarouxCache[Document]()
+    self.cache = LarouxCache[Document](100)
     self.port = 80
 
   def serve(url: str) -> Document:
