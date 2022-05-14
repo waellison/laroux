@@ -14,7 +14,7 @@ FOR A PARTICULAR PURPOSE.  See the GNU General Public License for details.
 You should have received a copy of the GNU Affero General Public License
 along with Laroux.  If not, see <https://www.gnu.org/licenses>.
 """
-from typing import Union, Generic, TypeVar
+from typing import Union, Generic, TypeVar, List
 
 _K = TypeVar("k")
 _V = TypeVar("v")
@@ -192,7 +192,7 @@ class _LarouxCacheList(Generic[_V]):
         last.next = self.head
         self.head.prev = last
 
-    def arrayize(self) -> list[_V]:
+    def arrayize(self) -> List[_V]:
         return [i.value for i in self]
 
     def __str__(self) -> str:
