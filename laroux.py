@@ -17,7 +17,8 @@ Laroux.  If not, see <https://www.gnu.org/licenses>.
 """
 from typing import Union, Generic, TypeVar
 
-_T = TypeVar('T')
+_K = TypeVar('k')
+_V = TypeVar('v')
 
 # Removal from the backing list is a O(N) operation.  If I added a
 # class to make the list node retrievable via the backing hash table,
@@ -25,11 +26,11 @@ _T = TypeVar('T')
 # the benefit of being able to maintain order as desired.
 
 
-class LarouxCache(Generic[_T]):
+class LarouxCache(Generic[_K, _V]):
     def __init__(self, max_size: int = 32):
         self._max_size: int = max_size
         self._hash_table = dict()
-        self._cache_list: _LarouxCacheList[_T] = _LarouxCacheList[_T]()
+        self._cache_list: _LarouxCacheList[_V] = _LarouxCacheList[_V]()
         self._length: int = 0
 
     def __len__(self) -> int:
@@ -38,12 +39,11 @@ class LarouxCache(Generic[_T]):
     def resize(self, new_size: int) -> None:
         self._max_size = new_size
 
-    def push(self, value: _T) -> None:
-        if "__hash__" not in dir(value):
-            raise ValueError("child object of Laroux cache must be hashable")
+    def push(self, key: _K, value: _V) -> None:
+        if "__hash__" not in dir(key):
+            raise ValueError("key type of Laroux cache must be hashable")
 
-        value_hash = hash(value)
-        self._hash_table[value_hash] = value
+        self._hash_table[key] = value
         self._cache_list.push(value)
         self._length += 1
         self._evict()
@@ -55,11 +55,11 @@ class LarouxCache(Generic[_T]):
             self._cache_list.pop()
             self._length -= 1
 
-    def peek(self) -> Union[_T, None]:
+    def peek(self) -> Union[_V, None]:
         return self._cache_list.peek().value
 
-    def __getitem__(self, item: _T) -> Union[_T, None]:
-        retval = self._hash_table.get(hash(item), None)
+    def __getitem__(self, key: _K) -> Union[_V, None]:
+        retval = self._hash_table.get(key, None)
 
         if retval:
             connected_node = self._cache_list.find(retval)
@@ -72,16 +72,16 @@ class LarouxCache(Generic[_T]):
         return str([n.value for n in self._cache_list])
 
 
-class _ListNode(Generic[_T]):
-    def __init__(self, value: Union[_T, None]):
+class _ListNode(Generic[_V]):
+    def __init__(self, value: Union[_V, None]):
         self.value = value
-        self.prev: Union[_ListNode[_T], None] = None
-        self.next: Union[_ListNode[_T], None] = None
+        self.prev: Union[_ListNode[_V], None] = None
+        self.next: Union[_ListNode[_V], None] = None
     
     def __str__(self) -> str:
         return str(self.value)
 
-class _ListIterator(Generic[_T]):
+class _ListIterator(Generic[_V]):
   def __init__(self, linked_list):
     self.current = linked_list.head.next
     self.sentinel = linked_list.head
@@ -94,21 +94,21 @@ class _ListIterator(Generic[_T]):
     return retval
 
 
-class _LarouxCacheList(Generic[_T]):
+class _LarouxCacheList(Generic[_V]):
     def __init__(self):
-        self.head: _ListNode[_T] = _ListNode(None)
-        self.head.prev: _ListNode[_T] = self.head
-        self.head.next: _ListNode[_T] = self.head
+        self.head: _ListNode[_V] = _ListNode(None)
+        self.head.prev: _ListNode[_V] = self.head
+        self.head.next: _ListNode[_V] = self.head
         self._length: int = 0
 
     def __len__(self) -> int:
         return self._length
 
-    def peek(self) -> _ListNode[_T]:
+    def peek(self) -> _ListNode[_V]:
         return self.head.next
 
-    def push(self, value: _T) -> None:
-        node = _ListNode[_T](value)
+    def push(self, value: _V) -> None:
+        node = _ListNode[_V](value)
         node.prev = self.head
         node.next = self.head.next
         self.head.next.prev = node
@@ -117,18 +117,18 @@ class _LarouxCacheList(Generic[_T]):
     def __iter__(self) -> _ListIterator:
         return _ListIterator(self)
 
-    def find(self, value) -> Union[_ListNode[_T], None]:
-        here: _ListNode[_T] = self.head.next
+    def find(self, value) -> Union[_ListNode[_V], None]:
+        here: _ListNode[_V] = self.head.next
 
         while here != self.head:
-            if hash(here.value) == hash(value):
+            if here == value:
                 return here
             else:
                 here = here.next
 
         return None
 
-    def remove(self, node: Union[_ListNode[_T], None]) -> Union[_T, None]:
+    def remove(self, node: Union[_ListNode[_V], None]) -> Union[_V, None]:
         if node:
             previous = node.prev
             following = node.next
