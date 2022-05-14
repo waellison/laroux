@@ -3,43 +3,81 @@ Laroux: a simple, friendly LRU cache.
 
 Copyright (c) 2022 by William Ellison.
 
-Laroux is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
+Laroux is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
 
 Laroux is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 FOR A PARTICULAR PURPOSE.  See the GNU General Public License for details.
 
-You should have received a copy of the GNU General Public License along with
-Laroux.  If not, see <https://www.gnu.org/licenses>.
+You should have received a copy of the GNU Affero General Public License
+along with Laroux.  If not, see <https://www.gnu.org/licenses>.
 """
 from typing import Union, Generic, TypeVar
 
 _K = TypeVar('k')
 _V = TypeVar('v')
 
-# Removal from the backing list is a O(N) operation.  If I added a
-# class to make the list node retrievable via the backing hash table,
-# I could get constant-time retrieval from the list together with
-# the benefit of being able to maintain order as desired.
-
-
 class LarouxCache(Generic[_K, _V]):
+    """A general-purpose LRU cache class.
+
+    Defaults to 32 members upon creation but this may be customized at
+    the time of instantiation.
+
+    LRU caches work by promoting the most recently used items and
+    evicting the least recently used ones.  This can be a cheap, easy
+    way to improve performance on heavily trafficked websites.
+    """
+    
     def __init__(self, max_size: int = 32):
+        """Create a new Laroux cache.
+
+        The maximum size defaults to 32 members but may be customized by
+        the user of this library.
+
+        Params:
+        - max_size [int]: the maximum size of the cache, defaults to 32
+          members.
+        """
+
         self._max_size: int = max_size
         self._hash_table = dict()
         self._cache_list: _LarouxCacheList[_V] = _LarouxCacheList[_V]()
         self._length: int = 0
 
     def __len__(self) -> int:
+        """Returns the length of a Laroux cache."""
+
         return self._length
 
     def resize(self, new_size: int) -> None:
+        """Changes the size of a Laroux cache.
+        
+        Params:
+        - new_size [int]: the new size of the cache.
+
+        Warning:
+          Does not truncate the cache if the new maximum size is smaller
+          than the previous maximum size.
+        """
+
+        # TODO: If the new size is smaller than the previous size,
+        # truncate the cache accordingly.
         self._max_size = new_size
 
     def push(self, key: _K, value: _V) -> None:
+        """Add a new element to a Laroux cache as a key-value pair.
+
+        Params:
+        - key [_K]: the key 
+        - value [_V]: the value
+
+        Raises:
+          ValueError - if the passed key is of a non-hashable type
+        """
+
         if "__hash__" not in dir(key):
             raise ValueError("key type of Laroux cache must be hashable")
 
@@ -49,6 +87,14 @@ class LarouxCache(Generic[_K, _V]):
         self._evict()
 
     def _evict(self) -> None:
+        """Evict the least-recently-used member of a Laroux cache.
+
+        This method is not meant to be called publicly.
+
+        Params:
+          None.
+        """
+
         if len(self) > self._max_size:
             last = self._cache_list.head.prev
             self._hash_table.pop(hash(last), 'oops')
@@ -56,9 +102,12 @@ class LarouxCache(Generic[_K, _V]):
             self._length -= 1
 
     def peek(self) -> Union[_V, None]:
+        """Return the most-recently-used member of a Laroux cache."""
         return self._cache_list.peek().value
 
     def __getitem__(self, key: _K) -> Union[_V, None]:
+        """Retrieve the item matching a specific key, or None if it
+           doesn't exist."""
         retval = self._hash_table.get(key, None)
 
         if retval:
@@ -69,7 +118,8 @@ class LarouxCache(Generic[_K, _V]):
         return retval
 
     def __str__(self):
-        return str([n.value for n in self._cache_list])
+        """Stringize a Laroux cache to visualize its contents."""
+        return str([str(n) for n in self._cache_list])
 
 
 class _ListNode(Generic[_V]):
