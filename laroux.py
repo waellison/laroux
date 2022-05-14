@@ -16,8 +16,9 @@ along with Laroux.  If not, see <https://www.gnu.org/licenses>.
 """
 from typing import Union, Generic, TypeVar
 
-_K = TypeVar('k')
-_V = TypeVar('v')
+_K = TypeVar("k")
+_V = TypeVar("v")
+
 
 class LarouxCache(Generic[_K, _V]):
     """A general-purpose LRU cache class.
@@ -29,7 +30,7 @@ class LarouxCache(Generic[_K, _V]):
     evicting the least recently used ones.  This can be a cheap, easy
     way to improve performance on heavily trafficked websites.
     """
-    
+
     def __init__(self, max_size: int = 32):
         """Create a new Laroux cache.
 
@@ -51,7 +52,7 @@ class LarouxCache(Generic[_K, _V]):
 
     def resize(self, new_size: int) -> None:
         """Changes the size of a Laroux cache.
-        
+
         Params:
         - new_size [int]: the new size of the cache.
 
@@ -68,7 +69,7 @@ class LarouxCache(Generic[_K, _V]):
         """Add a new element to a Laroux cache as a key-value pair.
 
         Params:
-        - key [_K]: the key 
+        - key [_K]: the key
         - value [_V]: the value
 
         Raises:
@@ -92,7 +93,7 @@ class LarouxCache(Generic[_K, _V]):
         """
         if len(self) > self._max_size:
             last = self._cache_list.head.prev
-            self._hash_table.pop(hash(last), 'oops')
+            self._hash_table.pop(hash(last), "oops")
             self._cache_list.pop()
             self._length -= 1
 
@@ -121,21 +122,22 @@ class _ListNode(Generic[_V]):
         self.value = value
         self.prev: Union[_ListNode[_V], None] = None
         self.next: Union[_ListNode[_V], None] = None
-    
+
     def __str__(self) -> str:
         return str(self.value)
 
+
 class _ListIterator(Generic[_V]):
-  def __init__(self, linked_list):
-    self.current = linked_list.head.next
-    self.sentinel = linked_list.head
-  
-  def __next__(self):
-    if self.current == self.sentinel:
-      raise StopIteration
-    retval = self.current
-    self.current = self.current.next
-    return retval
+    def __init__(self, linked_list):
+        self.current = linked_list.head.next
+        self.sentinel = linked_list.head
+
+    def __next__(self):
+        if self.current == self.sentinel:
+            raise StopIteration
+        retval = self.current
+        self.current = self.current.next
+        return retval
 
 
 class _LarouxCacheList(Generic[_V]):
@@ -190,4 +192,3 @@ class _LarouxCacheList(Generic[_V]):
 
     def __str__(self) -> str:
         return str([str(n) for n in self])
-        
