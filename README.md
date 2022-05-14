@@ -1,5 +1,6 @@
 # Welcome to Laroux
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/701700511b97480aa8d1dd4784866c2f)](https://app.codacy.com/gh/waellison/laroux?utm_source=github.com&utm_medium=referral&utm_content=waellison/laroux&utm_campaign=Badge_Grade_Settings)
 [![CodeQL](https://github.com/waellison/laroux/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/waellison/laroux/actions/workflows/codeql-analysis.yml)
 [![License](https://img.shields.io/github/license/waellison/laroux)](#)
 
