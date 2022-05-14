@@ -5,6 +5,7 @@
 [![build](https://github.com/waellison/laroux/actions/workflows/pytest.yml/badge.svg)](https://github.com/waellison/laroux/actions/workflows/pytest.yml)
 [![CodeQL](https://github.com/waellison/laroux/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/waellison/laroux/actions/workflows/codeql-analysis.yml)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI](https://img.shields.io/pypi/v/laroux)](https://pypi.org/project/laroux/)
 [![License](https://img.shields.io/github/license/waellison/laroux)](#)
 
 _Laroux_ is a simple, friendly LRU cache written in Python.
