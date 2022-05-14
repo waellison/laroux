@@ -1,5 +1,4 @@
-"""
-Laroux: a simple, friendly LRU cache.
+"""Laroux: a simple, friendly LRU cache.
 
 Copyright (c) 2022 by William Ellison.
 
@@ -41,7 +40,6 @@ class LarouxCache(Generic[_K, _V]):
         - max_size [int]: the maximum size of the cache, defaults to 32
           members.
         """
-
         self._max_size: int = max_size
         self._hash_table = dict()
         self._cache_list: _LarouxCacheList[_V] = _LarouxCacheList[_V]()
@@ -49,7 +47,6 @@ class LarouxCache(Generic[_K, _V]):
 
     def __len__(self) -> int:
         """Returns the length of a Laroux cache."""
-
         return self._length
 
     def resize(self, new_size: int) -> None:
@@ -77,7 +74,6 @@ class LarouxCache(Generic[_K, _V]):
         Raises:
           ValueError - if the passed key is of a non-hashable type
         """
-
         if "__hash__" not in dir(key):
             raise ValueError("key type of Laroux cache must be hashable")
 
@@ -94,7 +90,6 @@ class LarouxCache(Generic[_K, _V]):
         Params:
           None.
         """
-
         if len(self) > self._max_size:
             last = self._cache_list.head.prev
             self._hash_table.pop(hash(last), 'oops')
@@ -106,8 +101,7 @@ class LarouxCache(Generic[_K, _V]):
         return self._cache_list.peek().value
 
     def __getitem__(self, key: _K) -> Union[_V, None]:
-        """Retrieve the item matching a specific key, or None if it
-           doesn't exist."""
+        """Retrieve the item matching a specific key, or None if it doesn't exist."""
         retval = self._hash_table.get(key, None)
 
         if retval:
