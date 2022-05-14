@@ -159,6 +159,7 @@ class _LarouxCacheList(Generic[_V]):
         node.next = self.head.next
         self.head.next.prev = node
         self.head.next = node
+        self._length += 1
 
     def __iter__(self) -> _ListIterator:
         return _ListIterator(self)
@@ -167,7 +168,7 @@ class _LarouxCacheList(Generic[_V]):
         here: _ListNode[_V] = self.head.next
 
         while here != self.head:
-            if here == value:
+            if here.value == value:
                 return here
             else:
                 here = here.next
@@ -182,6 +183,7 @@ class _LarouxCacheList(Generic[_V]):
             following.prev = previous
             node.next = None
             node.prev = None
+            self._length -= 1
             return node.value
         return None
 
@@ -190,5 +192,8 @@ class _LarouxCacheList(Generic[_V]):
         last.next = self.head
         self.head.prev = last
 
+    def arrayize(self) -> list[_V]:
+        return [i.value for i in self]
+
     def __str__(self) -> str:
-        return str([str(n) for n in self])
+        return str(self.arrayize())
