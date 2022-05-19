@@ -37,6 +37,18 @@ def test_add_and_retrieve():
     assert cache["bar"] == "b"
 
 
+def test_eviction():
+    cache = LarouxCache[str, int](max_size=3)
+    ltr = ["a", "b", "c"]
+    num = [0, 1, 2]
+    for k, v in zip(ltr, num):
+        cache.push(k, v)
+    cache.push("d", 3)
+    assert len(cache) == 3
+    val = cache["a"]
+    assert val is None
+
+
 def test_stringize_cache():
     cache = LarouxCache[str, str](max_size=1)
     cache.push("foo", "a")
@@ -44,58 +56,88 @@ def test_stringize_cache():
 
 
 def test_new_list_is_empty():
-    lst = _LarouxCacheList[str]()
+    lst = _LarouxCacheList[str, str]()
     assert len(lst) == 0
 
 
 def test_stringize_list_node():
-    lst = _LarouxCacheList[str]()
-    lst.push("a")
+    lst = _LarouxCacheList[str, str]()
+    lst.push("a", "foo")
+    assert str(lst.peek()) == "foo"
 
 
 def test_list_size_set_correctly_on_add():
-    lst = _LarouxCacheList[str]()
-    lst.push("a")
+    lst = _LarouxCacheList[str, str]()
+    lst.push("a", "foo")
     assert len(lst) == 1
 
 
 def test_list_size_set_correctly_on_remove():
-    lst = _LarouxCacheList[str]()
-    lst.push("a")
+    lst = _LarouxCacheList[str, str]()
+    lst.push("a", "foo")
     lst.remove(lst.peek())
     assert len(lst) == 0
 
 
 def test_list_iteration():
-    lst = _LarouxCacheList[str]()
-    lst.push("a")
+    lst = _LarouxCacheList[str, str]()
+    lst.push("a", "a")
     lit = iter(lst)
     assert lit.current.value == "a"
 
 
 def test_list_correct_order():
-    lst = _LarouxCacheList[int]()
+    lst = _LarouxCacheList[int, int]()
     for i in range(10):
-        lst.push(i)
+        lst.push(i, i)
     for i, v in zip(range(0, 10, -1), lst):
         assert i == v.value
 
 
 def test_list_arrayize():
     array = [1, 2, 3]
-    lst = _LarouxCacheList[int]()
+    lst = _LarouxCacheList[int, int]()
     for i in reversed(range(1, 4)):
-        lst.push(i)
+        lst.push(i, i)
     lst_array = lst.arrayize()
     assert lst_array == array
 
 
 def test_list_remove():
-    lst = _LarouxCacheList[int]()
+    lst = _LarouxCacheList[int, int]()
     for i in reversed(range(0, 10)):
-        lst.push(i)
+        lst.push(i, i)
     node = lst.find(5)
     if node:
-        lst.remove(node)
+        retval = lst.remove(node)
     assert len(lst) == 9
     assert 5 not in lst.arrayize()
+
+
+def test_list_find():
+    lst = _LarouxCacheList[int, int]()
+    for i in range(0, 3):
+        lst.push(i, i)
+    node = lst.find(38)
+    assert node is None
+
+
+def test_list_pop():
+    lst = _LarouxCacheList[int, int]()
+    for i in range(0, 3):
+        lst.push(i, i)
+    assert lst.pop() == 0
+
+
+def test_list_remove_nonexistent_returns_none():
+    lst = _LarouxCacheList[int, int]()
+    for i in range(0, 3):
+        lst.push(i, i)
+    assert lst.remove(None) is None
+
+
+def test_list_stringize():
+    lst = _LarouxCacheList[int, int]()
+    for i in range(0, 3):
+        lst.push(i, i)
+    assert str(lst) == "[2, 1, 0]"
