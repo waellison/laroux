@@ -42,8 +42,8 @@ class LarouxCache(Generic[_K, _V]):
           members.
         """
         self._max_size: int = max_size
-        self._hash_table = dict()
-        self._cache_list: _LarouxCacheList[_V] = _LarouxCacheList[_V]()
+        self._hash_table = {}
+        self._cache_list: _LarouxCacheList[_K, _V] = _LarouxCacheList[_K, _V]()
         self._length: int = 0
 
     def __len__(self) -> int:
@@ -79,7 +79,7 @@ class LarouxCache(Generic[_K, _V]):
             raise ValueError("key type of Laroux cache must be hashable")
 
         self._hash_table[key] = value
-        self._cache_list.push(value)
+        self._cache_list.push(key, value)
         self._length += 1
         self._evict()
 
@@ -93,7 +93,7 @@ class LarouxCache(Generic[_K, _V]):
         """
         if len(self) > self._max_size:
             last = self._cache_list.head.prev
-            self._hash_table.pop(hash(last), "oops")
+            self._hash_table.pop(last.key, "oops")
             self._cache_list.pop()
             self._length -= 1
 
@@ -106,9 +106,9 @@ class LarouxCache(Generic[_K, _V]):
         retval = self._hash_table.get(key, None)
 
         if retval:
-            connected_node = self._cache_list.find(retval)
+            connected_node = self._cache_list.find(retval, value_search=True)
             _ = self._cache_list.remove(connected_node)
-            self._cache_list.push(retval)
+            self._cache_list.push(key, retval)
 
         return retval
 
@@ -117,11 +117,12 @@ class LarouxCache(Generic[_K, _V]):
         return str([str(n) for n in self._cache_list])
 
 
-class _ListNode(Generic[_V]):
-    def __init__(self, value: Union[_V, None]):
+class _ListNode(Generic[_K, _V]):
+    def __init__(self, key: _K, value: Union[_V, None]):
         self.value = value
-        self.prev: Union[_ListNode[_V], None] = None
-        self.next: Union[_ListNode[_V], None] = None
+        self.key = key
+        self.prev: Union[_ListNode[_K, _V], None] = None
+        self.next: Union[_ListNode[_K, _V], None] = None
 
     def __str__(self) -> str:
         return str(self.value)
@@ -140,21 +141,21 @@ class _ListIterator(Generic[_V]):
         return retval
 
 
-class _LarouxCacheList(Generic[_V]):
+class _LarouxCacheList(Generic[_K, _V]):
     def __init__(self):
-        self.head: _ListNode[_V] = _ListNode(None)
-        self.head.prev: _ListNode[_V] = self.head
-        self.head.next: _ListNode[_V] = self.head
+        self.head: _ListNode[_K, _V] = _ListNode[_K, _V](None, None)
+        self.head.prev: _ListNode[_K, _V] = self.head
+        self.head.next: _ListNode[_K, _V] = self.head
         self._length: int = 0
 
     def __len__(self) -> int:
         return self._length
 
-    def peek(self) -> _ListNode[_V]:
+    def peek(self) -> _ListNode[_K, _V]:
         return self.head.next
 
-    def push(self, value: _V) -> None:
-        node = _ListNode[_V](value)
+    def push(self, key: _V, value: _V) -> None:
+        node = _ListNode[_K, _V](key, value)
         node.prev = self.head
         node.next = self.head.next
         self.head.next.prev = node
@@ -164,18 +165,20 @@ class _LarouxCacheList(Generic[_V]):
     def __iter__(self) -> _ListIterator:
         return _ListIterator(self)
 
-    def find(self, value) -> Union[_ListNode[_V], None]:
-        here: _ListNode[_V] = self.head.next
+    def find(self, needle: Union[_K, _V], value_search: bool = False) -> Union[_ListNode[_K, _V], None]:
+        here: _ListNode[_K, _V] = self.head.next
 
         while here != self.head:
-            if here.value == value:
+            if value_search and here.value == needle:
+                return here
+            elif here.key == needle:
                 return here
             else:
                 here = here.next
 
         return None
 
-    def remove(self, node: Union[_ListNode[_V], None]) -> Union[_V, None]:
+    def remove(self, node: Union[_ListNode[_K, _V], None]) -> Union[_V, None]:
         if node:
             previous = node.prev
             following = node.next
@@ -187,10 +190,12 @@ class _LarouxCacheList(Generic[_V]):
             return node.value
         return None
 
-    def pop(self) -> None:
+    def pop(self) -> _V:
+        retval: _V = self.head.prev.value
         last = self.head.prev.prev
         last.next = self.head
         self.head.prev = last
+        return retval
 
     def arrayize(self) -> List[_V]:
         return [i.value for i in self]
